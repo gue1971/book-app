@@ -28,6 +28,8 @@ const CANVAS_HEIGHT = 1920;
 const FOOTER_HEIGHT = 120;
 const MAIN_HEIGHT = 1800;
 const TOC_ROW_HEIGHT = 88;
+const NO_INDENT_HEAD_RE = /^[「『（【〈《〔［｛〝“]/;
+const DIALOGUE_DASH_RE = /^[-―—]{2,}/;
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState(0); 
@@ -213,12 +215,43 @@ export default function App() {
       );
     }
     const view = currentEntry.views.find(v => v.id === currentViewId) || currentEntry.views[0];
+    const textParagraphs = String(view.content ?? "")
+      .replace(/\r\n/g, "\n")
+      .split(/\n{2,}/)
+      .map((p) => p.trimEnd())
+      .filter(Boolean);
+
     return (
       <div className="w-full h-full bg-white text-slate-900 p-10 pt-16">
         {view.type === 'text' && (
-          <div className="h-full">
+          <div className="h-full overflow-y-auto pr-2">
             <h3 className="text-4xl font-bold mb-10">{currentEntry.title}</h3>
-            <p className="leading-relaxed" style={{ fontSize: settings.fontSize }}>{view.content}</p>
+            {currentEntry.author && (
+              <p className="mb-8 text-xl tracking-wide text-slate-500">著者: {currentEntry.author}</p>
+            )}
+            <div className="space-y-6">
+              {textParagraphs.map((paragraph, idx) => (
+                <p
+                  key={idx}
+                  className="whitespace-pre-wrap"
+                  style={{
+                    fontSize: settings.fontSize,
+                    lineHeight: 1.95,
+                    letterSpacing: "0.02em",
+                    textAlign: "justify",
+                    textJustify: "inter-ideograph",
+                    lineBreak: "strict",
+                    wordBreak: "keep-all",
+                    overflowWrap: "anywhere",
+                    hangingPunctuation: "first allow-end last",
+                    textIndent:
+                      NO_INDENT_HEAD_RE.test(paragraph) || DIALOGUE_DASH_RE.test(paragraph) ? "0em" : "1em"
+                  }}
+                >
+                  {paragraph}
+                </p>
+              ))}
+            </div>
           </div>
         )}
         {view.type === 'image' && (
