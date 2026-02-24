@@ -1,0 +1,21 @@
+{
+  "short_name": "BookApp",
+  "name": "Immersive Book Reader",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192.png?text=BookApp",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://via.placeholder.com/512.png?text=BookApp",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0f172a",
+  "background_color": "#0f172a",
+  "orientation": "portrait"
+}
