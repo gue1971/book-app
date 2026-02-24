@@ -39,23 +39,55 @@ export default function App() {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const containerRef = useRef(null);
+  const normalizedEntries = useMemo(
+    () =>
+      entries.map((entry, idx) => {
+        if (Array.isArray(entry.views) && entry.views.length > 0) {
+          return {
+            ...entry,
+            initialView: entry.initialView || entry.views[0].id
+          };
+        }
+        return {
+          ...entry,
+          id: entry.id ?? `entry-${idx + 1}`,
+          initialView: "v-text",
+          views: [
+            {
+              id: "v-text",
+              type: "text",
+              title: entry.author ? `本文（${entry.author}）` : "本文",
+              content: entry.content ?? ""
+            }
+          ]
+        };
+      }),
+    []
+  );
 
   // --- 初期化 & PWA対応 ---
   useEffect(() => {
     // 状態復元
     const saved = localStorage.getItem(APP_ID);
     if (saved) {
-      const { page, viewId, marks, settings } = JSON.parse(saved);
-      setCurrentPage(page);
-      setCurrentViewId(viewId);
-      setMarks(marks || []);
-      setSettings(settings || { fontSize: 24, theme: 'dark' });
+      try {
+        const { page, viewId, marks, settings } = JSON.parse(saved);
+        const maxPage = normalizedEntries.length + 1;
+        const safePage = Number.isInteger(page) ? Math.min(Math.max(page, 0), maxPage) : 0;
+        setCurrentPage(safePage);
+        setCurrentViewId(viewId ?? null);
+        setMarks(Array.isArray(marks) ? marks : []);
+        setSettings(settings || { fontSize: 24, theme: 'dark' });
+      } catch {
+        localStorage.removeItem(APP_ID);
+      }
     }
     
     // リサイズ処理
     const handleResize = () => {
       const clientWidth = window.innerWidth;
       const clientHeight = window.innerHeight;
+      if (clientWidth <= 0 || clientHeight <= 0) return;
       const s = Math.min(clientWidth / CANVAS_WIDTH, clientHeight / CANVAS_HEIGHT);
       setScale(s);
       setOffset({
@@ -72,10 +104,10 @@ export default function App() {
       setDeferredPrompt(e);
     });
 
-    // Service Worker登録
-    if ('serviceWorker' in navigator) {
+    // Service Worker登録（本番のみ）
+    if (import.meta.env.PROD && 'serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(err => {
+        navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(err => {
           console.log('SW registration failed: ', err);
         });
       });
@@ -94,18 +126,18 @@ export default function App() {
     }));
   }, [currentPage, currentViewId, marks, settings]);
 
-  const currentEntry = currentPage >= 2 ? entries[currentPage - 2] : null;
+  const currentEntry = currentPage >= 2 ? normalizedEntries[currentPage - 2] : null;
 
   const goToPage = (pageIdx) => {
     setCurrentPage(pageIdx);
     setShowOverlay(false);
     if (pageIdx >= 2) {
-      const entry = entries[pageIdx - 2];
+      const entry = normalizedEntries[pageIdx - 2];
       setCurrentViewId(entry.initialView);
     }
   };
 
-  const next = () => { if (currentPage < entries.length + 1) goToPage(currentPage + 1); };
+  const next = () => { if (currentPage < normalizedEntries.length + 1) goToPage(currentPage + 1); };
   const prev = () => { if (currentPage > 0) goToPage(currentPage - 1); };
 
   const handleCanvasClick = (e) => {
@@ -155,7 +187,7 @@ export default function App() {
         <div className="w-20 h-2 bg-indigo-600 mt-4" />
       </div>
       <div className="flex-1 overflow-y-auto">
-        {entries.map((entry, i) => (
+        {normalizedEntries.map((entry, i) => (
           <button
             key={entry.id}
             onClick={() => goToPage(i + 2)}
@@ -172,7 +204,14 @@ export default function App() {
   );
 
   const EntryContent = () => {
-    if (!currentEntry) return null;
+    if (!currentEntry) {
+      return (
+        <div className="h-full w-full bg-white p-10 pt-16 text-slate-900">
+          <h3 className="mb-4 text-3xl font-bold">表示できるコンテンツがありません</h3>
+          <p className="text-xl text-slate-600">目次に戻ってページを選び直してください。</p>
+        </div>
+      );
+    }
     const view = currentEntry.views.find(v => v.id === currentViewId) || currentEntry.views[0];
     return (
       <div className="w-full h-full bg-white text-slate-900 p-10 pt-16">
@@ -234,7 +273,7 @@ export default function App() {
       </div>
       <div className="flex-1" />
       <div className="p-10 bg-black/40">
-        <input type="range" min="0" max={entries.length + 1} value={currentPage} onChange={(e) => goToPage(parseInt(e.target.value))} className="w-full h-2 mb-8 accent-white" />
+        <input type="range" min="0" max={normalizedEntries.length + 1} value={currentPage} onChange={(e) => goToPage(parseInt(e.target.value, 10))} className="w-full h-2 mb-8 accent-white" />
         <div className="flex justify-between text-white">
           <button onClick={prev} className="p-6 bg-white/10 rounded-full"><ChevronLeft size={48} /></button>
           <div className="text-center">
@@ -275,7 +314,7 @@ export default function App() {
                 ))}
               </div>
             ) : (
-              <div className="text-white/40 font-mono">P.{currentPage - 1} / {entries.length}</div>
+              <div className="text-white/40 font-mono">P.{currentPage - 1} / {normalizedEntries.length}</div>
             )}
           </div>
         )}
