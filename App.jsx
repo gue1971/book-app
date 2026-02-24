@@ -30,6 +30,7 @@ const MAIN_HEIGHT = 1800;
 const TOC_ROW_HEIGHT = 88;
 const NO_INDENT_HEAD_RE = /^[「『（【〈《〔［｛〝“]/;
 const DIALOGUE_DASH_RE = /^[-―—]{2,}/;
+const JP_CHAR_RE = /[ぁ-んァ-ヶー一-龠々〆ヵヶ]/;
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState(0); 
@@ -218,7 +219,14 @@ export default function App() {
     const textParagraphs = String(view.content ?? "")
       .replace(/\r\n/g, "\n")
       .split(/\n{2,}/)
-      .map((p) => p.trimEnd())
+      .map((paragraph) =>
+        paragraph
+          .split("\n")
+          .map((line) => line.replace(/^ +/, "").trimEnd())
+          .join("")
+          .replace(/([ぁ-んァ-ヶー一-龠々〆ヵヶ]) +([ぁ-んァ-ヶー一-龠々〆ヵヶ])/g, "$1$2")
+          .trimEnd()
+      )
       .filter(Boolean);
 
     return (
@@ -230,27 +238,34 @@ export default function App() {
               <p className="mb-8 text-xl tracking-wide text-slate-500">著者: {currentEntry.author}</p>
             )}
             <div className="space-y-6">
-              {textParagraphs.map((paragraph, idx) => (
-                <p
-                  key={idx}
-                  className="whitespace-pre-wrap"
-                  style={{
-                    fontSize: settings.fontSize,
-                    lineHeight: 1.95,
-                    letterSpacing: "0.02em",
-                    textAlign: "justify",
-                    textJustify: "inter-ideograph",
-                    lineBreak: "strict",
-                    wordBreak: "keep-all",
-                    overflowWrap: "anywhere",
-                    hangingPunctuation: "first allow-end last",
-                    textIndent:
-                      NO_INDENT_HEAD_RE.test(paragraph) || DIALOGUE_DASH_RE.test(paragraph) ? "0em" : "1em"
-                  }}
-                >
-                  {paragraph}
-                </p>
-              ))}
+              {textParagraphs.map((paragraph, idx) => {
+                const start = paragraph.trimStart();
+                const noIndentByLeading = start.startsWith("　");
+                const noIndentByHead =
+                  NO_INDENT_HEAD_RE.test(start) ||
+                  DIALOGUE_DASH_RE.test(start) ||
+                  !JP_CHAR_RE.test(start.charAt(0));
+
+                return (
+                  <p
+                    key={idx}
+                    className="whitespace-pre-wrap text-slate-800"
+                    style={{
+                      fontSize: settings.fontSize,
+                      lineHeight: 1.9,
+                      letterSpacing: "0.01em",
+                      textAlign: "left",
+                      lineBreak: "strict",
+                      wordBreak: "normal",
+                      overflowWrap: "break-word",
+                      fontFamily: `"Hiragino Mincho ProN", "Yu Mincho", "Hiragino Serif", serif`,
+                      textIndent: noIndentByLeading || noIndentByHead ? "0em" : "1em"
+                    }}
+                  >
+                    {paragraph}
+                  </p>
+                );
+              })}
             </div>
           </div>
         )}
