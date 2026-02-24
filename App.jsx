@@ -176,19 +176,11 @@ export default function App() {
   // --- Views ---
 
   const CoverView = () => (
-    <div className="relative w-full h-full bg-slate-900 flex flex-col items-center justify-center text-white p-12">
+    <div className="relative h-full w-full bg-slate-900">
       <div
-        className="absolute inset-0 bg-cover bg-center opacity-60"
+        className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${import.meta.env.BASE_URL}cover_01.png)` }}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950" />
-      <div className="z-10 text-center space-y-8">
-        <h1 className="text-8xl font-black tracking-tighter mb-4 drop-shadow-2xl">PWA<br/>BOOK</h1>
-        <p className="text-2xl font-light opacity-80 tracking-[0.5em]">IMMERSIVE READING</p>
-        <button onClick={next} className="px-10 py-4 bg-white text-slate-900 rounded-full font-bold text-xl">
-          READ NOW
-        </button>
-      </div>
     </div>
   );
 
