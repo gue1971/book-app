@@ -130,6 +130,12 @@ export default function App() {
   }, [currentPage, currentViewId, marks, settings]);
 
   const currentEntry = currentPage >= 2 ? normalizedEntries[currentPage - 2] : null;
+  const contentFontSize = useMemo(() => {
+    if (!Number.isFinite(scale) || scale <= 0) return settings.fontSize;
+    const minReadablePxOnDevice = 18;
+    const logicalMinSize = Math.ceil(minReadablePxOnDevice / scale);
+    return Math.max(settings.fontSize, logicalMinSize);
+  }, [scale, settings.fontSize]);
 
   const goToPage = (pageIdx) => {
     setCurrentPage(pageIdx);
@@ -171,7 +177,10 @@ export default function App() {
 
   const CoverView = () => (
     <div className="relative w-full h-full bg-slate-900 flex flex-col items-center justify-center text-white p-12">
-      <div className="absolute inset-0 opacity-40 bg-[url('https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=1080&h=1920&fit=crop')] bg-cover bg-center" />
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-60"
+        style={{ backgroundImage: `url(${import.meta.env.BASE_URL}cover_01.png)` }}
+      />
       <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950" />
       <div className="z-10 text-center space-y-8">
         <h1 className="text-8xl font-black tracking-tighter mb-4 drop-shadow-2xl">PWA<br/>BOOK</h1>
@@ -251,7 +260,7 @@ export default function App() {
                     key={idx}
                     className="whitespace-pre-wrap text-slate-800"
                     style={{
-                      fontSize: settings.fontSize,
+                      fontSize: contentFontSize,
                       lineHeight: 1.9,
                       letterSpacing: "0.01em",
                       textAlign: "left",
