@@ -176,11 +176,39 @@ export default function App() {
   // --- Views ---
 
   const CoverView = () => (
-    <div className="relative h-full w-full bg-slate-900">
+    <div className="relative h-full w-full bg-[#f5f5f5] text-[#161616]">
       <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${import.meta.env.BASE_URL}cover_01.png)` }}
+        className="absolute inset-8 border-[6px]"
+        style={{ borderColor: "#7a899b" }}
       />
+      <div
+        className="absolute inset-[56px] border-[2px]"
+        style={{ borderColor: "#9aa7b5" }}
+      />
+
+      <div className="absolute left-0 top-[560px] w-full px-20 text-center">
+        <h1
+          className="text-[84px] font-semibold tracking-[0.06em]"
+          style={{ fontFamily: `"Hiragino Mincho ProN", "Yu Mincho", "Hiragino Serif", serif` }}
+        >
+          あみちゃん
+        </h1>
+        <p
+          className="mt-8 text-[44px] tracking-[0.03em]"
+          style={{ fontFamily: `"Hiragino Mincho ProN", "Yu Mincho", "Hiragino Serif", serif` }}
+        >
+          第２１９回短編小説新人賞　最終選考作品
+        </p>
+      </div>
+
+      <div className="absolute bottom-[250px] left-0 w-full px-20 text-center">
+        <p
+          className="text-[72px] font-semibold tracking-[0.05em]"
+          style={{ fontFamily: `"Hiragino Mincho ProN", "Yu Mincho", "Hiragino Serif", serif` }}
+        >
+          御厨佐代子
+        </p>
+      </div>
     </div>
   );
 
